@@ -33,15 +33,19 @@ jobs:
       - name: Fetch Supernote Android Wrapper & buildPlugin.sh from 82deg/supernote-plugins
         run: |
           git clone --depth 1 https://github.com/82deg/supernote-plugins.git ref_plugins
-          TEMPLATE_DIR=$(find ref_plugins -maxdepth 3 -name "buildPlugin.sh" -exec dirname {} \; | head -n 1)
+          TEMPLATE_DIR=$(find ref_plugins -name "buildPlugin.sh" -exec dirname {} \; | head -n 1)
           echo "Using template directory: $TEMPLATE_DIR"
+          if [ -z "$TEMPLATE_DIR" ]; then
+            echo "Could not find buildPlugin.sh in ref_plugins:"
+            find ref_plugins -maxdepth 3
+            exit 1
+          fi
           cp -r "$TEMPLATE_DIR/android" ./android
           cp "$TEMPLATE_DIR/buildPlugin.sh" ./buildPlugin.sh
           chmod +x ./buildPlugin.sh
           if [ -f "$TEMPLATE_DIR/metro.config.js" ]; then cp "$TEMPLATE_DIR/metro.config.js" ./metro.config.js; fi
           if [ -f "$TEMPLATE_DIR/babel.config.js" ]; then cp "$TEMPLATE_DIR/babel.config.js" ./babel.config.js; fi
-          # Align sn-plugin-lib version with the working template
-          node -e '
+          TEMPLATE_DIR="$TEMPLATE_DIR" node -e '
             const fs = require("fs");
             const tplPkg = JSON.parse(fs.readFileSync(process.env.TEMPLATE_DIR + "/package.json", "utf8"));
             const myPkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
@@ -49,7 +53,7 @@ jobs:
               myPkg.dependencies["sn-plugin-lib"] = tplPkg.dependencies["sn-plugin-lib"];
             }
             fs.writeFileSync("package.json", JSON.stringify(myPkg, null, 2));
-          ' TEMPLATE_DIR="$TEMPLATE_DIR"
+          '
           rm -rf ref_plugins
 
       - name: Install Dependencies
