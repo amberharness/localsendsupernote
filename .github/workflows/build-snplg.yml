@@ -1,0 +1,49 @@
+name: Build Supernote Plugin (.snplg)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-snplg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JDK 19
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '19'
+
+      - name: Setup Android SDK (API 35)
+        uses: android-actions/setup-android@v3
+
+      - name: Clone Official Supernote Plugin Template SDK
+        run: |
+          git clone --depth 1 https://github.com/Supernote-SDK/supernote-plugin-template.git sdk_template
+          cp -r sdk_template/android ./android
+          cp sdk_template/buildPlugin.sh ./buildPlugin.sh
+          chmod +x ./buildPlugin.sh
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build .snplg Package (Pass 1 - Autolink)
+        run: ./buildPlugin.sh || true
+
+      - name: Build .snplg Package (Pass 2 - Package)
+        run: ./buildPlugin.sh
+
+      - name: Upload .snplg Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalSendLayer4Placer-snplg
+          path: "**/*.snplg"
