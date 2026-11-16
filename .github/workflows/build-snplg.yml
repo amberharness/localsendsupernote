@@ -30,21 +30,26 @@ jobs:
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Fetch Supernote Android Wrapper & buildPlugin.sh from 82deg/supernote-plugins
+      - name: Fetch & Rebrand Supernote Android Template from 82deg/supernote-plugins
         run: |
           git clone --depth 1 https://github.com/82deg/supernote-plugins.git ref_plugins
           TEMPLATE_DIR=$(find ref_plugins -name "buildPlugin.sh" -exec dirname {} \; | head -n 1)
           echo "Using template directory: $TEMPLATE_DIR"
-          if [ -z "$TEMPLATE_DIR" ]; then
-            echo "Could not find buildPlugin.sh in ref_plugins:"
-            find ref_plugins -maxdepth 3
-            exit 1
-          fi
           cp -r "$TEMPLATE_DIR/android" ./android
           cp "$TEMPLATE_DIR/buildPlugin.sh" ./buildPlugin.sh
           chmod +x ./buildPlugin.sh
           if [ -f "$TEMPLATE_DIR/metro.config.js" ]; then cp "$TEMPLATE_DIR/metro.config.js" ./metro.config.js; fi
           if [ -f "$TEMPLATE_DIR/babel.config.js" ]; then cp "$TEMPLATE_DIR/babel.config.js" ./babel.config.js; fi
+
+          # Extract the template's original pluginID and replace it across android/ with our pluginID
+          OLD_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$TEMPLATE_DIR/PluginConfig.json','utf8')).pluginID)")
+          NEW_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('PluginConfig.json','utf8')).pluginID)")
+          echo "Rebranding Android namespace from $OLD_ID -> $NEW_ID"
+          if [ -n "$OLD_ID" ] && [ "$OLD_ID" != "$NEW_ID" ]; then
+            find ./android -type f \( -name "*.gradle" -o -name "*.gradle.kts" -o -name "*.xml" -o -name "*.java" -o -name "*.kt" \) -exec sed -i "s/$OLD_ID/$NEW_ID/g" {} +
+          fi
+
+          # Sync sn-plugin-lib dependency from the working template
           TEMPLATE_DIR="$TEMPLATE_DIR" node -e '
             const fs = require("fs");
             const tplPkg = JSON.parse(fs.readFileSync(process.env.TEMPLATE_DIR + "/package.json", "utf8"));
@@ -64,6 +69,12 @@ jobs:
 
       - name: Build .snplg Package (Pass 2 - Package)
         run: ./buildPlugin.sh
+
+      - name: Inspect Generated .snplg Contents
+        run: |
+          SNPLG_FILE=$(find . -name "*.snplg" | head -n 1)
+          echo "Built file: $SNPLG_FILE"
+          unzip -l "$SNPLG_FILE"
 
       - name: Upload .snplg Artifact
         uses: actions/upload-artifact@v4
