@@ -1,0 +1,21 @@
+{
+  "name": "supernote-localsend-layer4-placer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Supernote Chauvet 3.31.45 plugin that captures images received via LocalSend (org.localsend.localsend_app) in INBOX/EXPORT, lets you rotate, crop, and resize them, and pastes them into Layer 4 of the open note.",
+  "scripts": {
+    "build:snplg": "./buildPlugin.sh",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-fs": "^2.20.0",
+    "react-native-view-shot": "^4.0.3",
+    "sn-plugin-lib": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.2"
+  }
+}

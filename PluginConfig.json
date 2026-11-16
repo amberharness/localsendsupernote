@@ -1,0 +1,10 @@
+{
+  "pluginID": "com.community.localsend.layer4placer",
+  "pluginKey": "LocalSendLayer4Placer",
+  "versionCode": 1,
+  "versionName": "1.0.0",
+  "iconPath": "assets/icon.png",
+  "supportApp": [
+    "NOTE"
+  ]
+}
