@@ -23,8 +23,10 @@ jobs:
           distribution: 'temurin'
           java-version: '19'
 
-      - name: Setup Android SDK (API 35)
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK Platform 35 & Build-Tools
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Clone Official Supernote Plugin Template SDK
         run: |
